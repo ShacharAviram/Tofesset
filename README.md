@@ -1,2 +1,2 @@
 # Tofesset
-Magdad project of a catch game
+מגד"ד - תופסת
