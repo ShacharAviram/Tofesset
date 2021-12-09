@@ -12,7 +12,7 @@ class ImageProcessor:
         """
         pass
 
-    def singleShoot(self) ->:
+    def singleShoot(self) -> object:
         # todo - define return type - image
         """
         take an image

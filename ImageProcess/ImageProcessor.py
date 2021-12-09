@@ -5,7 +5,7 @@
 
 import time
 from typing import *
-import CameraManager
+from ImageProcess import CameraManager
 
 MAX_DISTANCE_CATCH = 1.5
 PACE = 0.25
