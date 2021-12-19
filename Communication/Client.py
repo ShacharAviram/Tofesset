@@ -1,6 +1,5 @@
 """
-    This file contains the code that receives messages from other devices.
-    the messages need to be processed.
+    This file contains the Client code that receives and sends messages to the server.
 
     https://www.youtube.com/watch?v=_3nfrGdVcv0
 """
@@ -13,20 +12,4 @@ class Client:
         """
         pass
 
-    def send_message(self):
-        """
-        sends message to the server
-        :return:
-        """
-        pass
-
-    def end_communication(self):
-        pass
-
-    def check_for_message(self):
-        """
-
-        :return:
-        """
-        pass
 
