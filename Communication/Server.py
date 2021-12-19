@@ -1,6 +1,6 @@
 """
-    This file contains the code that sends messages to other devices.
-    the messages need to be created, sent, and verified (that it was received)
+    This file contains the code that operates the server.
+    it should contain messages handling code, data structure for the game and error handling functions.
 
     https://www.youtube.com/watch?v=MbXWrmQW-OE
 """
@@ -13,21 +13,4 @@ class Server:
         """
         pass
 
-    def create_caught_message(self, *args):
-        pass
-
-    def get_player_status(self, ip):
-        pass
-
-    def set_player_status(self, ip, new_status):
-        pass
-
-    def send_message(self, *args):
-        """
-        send the message!
-        :return: True if recieved, False else.
-        """
-        pass
-
-    def get_message(self):
 
