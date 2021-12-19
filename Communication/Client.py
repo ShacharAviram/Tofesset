@@ -3,6 +3,7 @@
     https://www.youtube.com/watch?v=_3nfrGdVcv0
 """
 import socket
+import time
 
 HOST = '192.168.43.161'  # The server's hostname or IP address
 PORT = 5050  # The port used by the server
@@ -14,7 +15,7 @@ class Client:
         self.port = PORT
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.status = 'Free'
-        self.is_game_started = False
+        self.is_game_started = True
 
 
     def connect(self):
@@ -25,25 +26,16 @@ class Client:
         self.s.connect((self.server_ip, self.port))
 
 
-    def check_if_received(self):
+    def check_if_received_return(self):
         """
         Check is a message has been received
-        :return: True or False
+        :return: data if received, else None
         """
-        data = self.s.recv(1024)
+        data = self.s.recv(4096)
         if data:
-            return True
+            return repr(data)
         else:
-            return False
-
-
-    def receive(self):
-        """
-        Receive message from server
-        :return: Data - type string
-        """
-        data = self.s.recv(1024)
-        return repr(data)
+            return None
 
 
     def send_message(self, message):
@@ -60,7 +52,7 @@ class Client:
         Check if the message has been received
         :return: True if the message has been received, else False
         """
-        if self.receive():
+        if self.check_if_received_return():
             return True
         else:
             return False
@@ -79,12 +71,18 @@ class Client:
             self.s.send("connected")
 
 
-    def main_loop(self):
+    def main_loop(self, message):
         self.connect()
+        print('connected')
         while self.is_game_started:
-            self.check_connection()
-            if self.check_if_received():
-                self.status = self.receive()
+            #self.check_connection()
+            self.send_message(message)
+
+            print('entered loop')
+            self.status = self.check_if_received_return()
+            print(self.status)
+            time.sleep(0.3)
+
 
 
 """
@@ -99,5 +97,4 @@ fetch status
 
 if __name__ == "__main__":
     client1 = Client('192.168.43.165', 5050)
-    client1.connect()
-    client1.send_message(b'hi')
+    client1.main_loop(b'1')
