@@ -6,21 +6,20 @@
 """
 
 
-class Transmitter:
+class Server:
     def __init__(self):
         """
-        initialize an instance of an transmitter
+        initialize an instance of an server
         """
         pass
 
     def create_caught_message(self, *args):
-        """
-        writes the message and gets the id of the reciever
-        :return: written message + id of the reciever
-        """
         pass
 
-    def create_verification_message(self, *args):
+    def get_player_status(self, ip):
+        pass
+
+    def set_player_status(self, ip, new_status):
         pass
 
     def send_message(self, *args):
@@ -30,10 +29,5 @@ class Transmitter:
         """
         pass
 
-    def verify_recieving(self, *args):
-        """
-        checks that the last sent message was recieved.
-        :return: True if recieved, False else.
-        """
-        pass
+    def get_message(self):
 

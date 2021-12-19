@@ -6,24 +6,27 @@
 """
 
 
-class Receiver:
+class Client:
     def __init__(self):
         """
-        initialize an instance of an receiver
+        initialize an instance of an client
         """
         pass
 
-    def check_for_message(self, *args):
+    def send_message(self):
         """
-        check for messages in a constant pace.
-        :return: message if received, None else.
-        """
-        pass
-
-    def process_message(self, *args):
-        """
-        processes the message, change status if necessary.
+        sends message to the server
+        :return:
         """
         pass
 
+    def end_communication(self):
+        pass
+
+    def check_for_message(self):
+        """
+
+        :return:
+        """
+        pass
 
