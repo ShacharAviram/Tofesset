@@ -79,9 +79,9 @@ class Manager:
         while self.client.is_game_started:
             self.client.check_if_received_return()
             if self.imageprocessor.catchFromImage()[0] is True:
-                message = self.imageprocessor.catchFromImage()[1]
-                self.client.send_message(bytes('{}message'.format(message)))  # TODO: check message format
-            time.sleep(0.3)
+                message = (2, self.imageprocessor.catchFromImage()[1])  # status and address
+                self.client.send_message(bytes('{message}'.format(message=message).encode('utf-8')))  # correct format
+            time.sleep(2.3)  # TODO define sleep time via image processing time
 
     def main_loop_player(self):
         """
@@ -92,6 +92,8 @@ class Manager:
         """
         while self.client.is_game_started:
             # self.check_connection()
-            self.client.status = self.client.check_if_received_return()  # TODO: check message format
-            time.sleep(0.3)
+            self.client.status = self.client.check_if_received_return()[2]  # TODO: check message format
+            if self.client.status == 2:
+                self.client.send_message(bytes('{message}'.format(message=(1, self.client.name)).encode('utf-8')))
+            time.sleep(2.3)  # TODO define sleep time via image processing time
 

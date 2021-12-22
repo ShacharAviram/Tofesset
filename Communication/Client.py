@@ -5,7 +5,7 @@
 import socket
 import time
 
-HOST = '192.168.43.161'  # The server's hostname or IP address
+HOST = '10.0.0.23'  # The server's hostname or IP address
 PORT = 5050  # The port used by the server
 
 class Client:
@@ -14,8 +14,9 @@ class Client:
         self.server_ip = HOST
         self.port = PORT
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.status = 'Free'
+        self.status = 0
         self.is_game_started = True
+        self.name = 11111  # TODO automatically define client address
 
 
     def connect(self):
@@ -33,6 +34,7 @@ class Client:
         """
         data = self.s.recv(4096)
         if data:
+            # self.send_message(data)  # check if necessary
             return repr(data)
         else:
             return None
@@ -47,15 +49,12 @@ class Client:
         self.s.sendall(message)
 
 
-    def verify_sent(self):
+    def check_change_status(self):
         """
-        Check if the message has been received
-        :return: True if the message has been received, else False
+        :return:
         """
-        if self.check_if_received_return():
+        if self.status != self.check_if_received_return()[2]:
             return True
-        else:
-            return False
 
 
     def check_connection(self):
@@ -74,14 +73,15 @@ class Client:
     def main_loop(self, message):
         self.connect()
         print('connected')
+        self.send_message(message)
         while self.is_game_started:
             #self.check_connection()
-            self.send_message(message)
-
             print('entered loop')
+            # if self.check_if_received_return():
+            self.send_message(bytes('{message}'.format(message=message).encode('utf-8')))
             self.status = self.check_if_received_return()
             print(self.status)
-            time.sleep(0.3)
+            time.sleep(2)  # TODO define sleep time via image processing time
 
 
 
@@ -96,5 +96,11 @@ fetch status
 """
 
 if __name__ == "__main__":
-    client1 = Client('192.168.43.165', 5050)
-    client1.main_loop(b'1')
+    client1 = Client('10.0.0.23', 2022)
+    client1.main_loop(b'0')
+
+"""
+import Client
+client2 = Client.Client('10.0.0.23', 2022)
+client2.main_loop(b'2')
+"""
