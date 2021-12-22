@@ -1,10 +1,12 @@
 import socket
 import select
+import random
 
 HEADER_LENGTH = 10
 
 IP = "127.0.0.1"
 PORT = 5050
+Game_begin = False
 
 # Create a socket
 # socket.AF_INET - address family, IPv4, some otehr possible are AF_INET6, AF_BLUETOOTH, AF_UNIX
@@ -28,6 +30,20 @@ clients = {}
 print(f'Listening for connections on {IP}:{PORT}...')
 
 database = dict()
+
+
+def get_player_list(dict):
+    list = []
+    for key in dict.keys():
+        list.append(key)
+    return list
+
+
+def get_random_catcher(loop_num):
+    if loop_num == 1:
+        players = get_player_list(database)
+        toffes_user = random.choice(players)
+        return toffes_user
 
 
 # Handles message receiving
@@ -101,9 +117,21 @@ while True:
             # Get user by notified socket, so we will know who sent the message
             user = clients[notified_socket]
             print(f'Received message from {user["data"].decode("utf-8")}: {message["data"].decode("utf-8")}')
-            # Update database
-            if message["data"].decode("utf-8") in '012':
-                database[user["data"].decode("utf-8")] = message["data"].decode("utf-8")
+            if message["data"].decode("utf-8") in '3':
+                Game_begin = True
+            # Begin game on queue!
+            if Game_begin:
+                # Getting random catcher
+                loop_num = 1
+                toffes = get_random_catcher(loop_num)
+                # Update database with catcher
+                database[toffes] = 1
+                # TODO Send the catcher he is the catcher
+
+                loop_num += 1
+                if message["data"].decode("utf-8") in '':
+                    # Update database
+                    database[user["data"].decode("utf-8")] = message["data"].decode("utf-8")
             # Iterate over connected clients and broadcast message
             for client_socket in clients:
                 # Send it only to reffered to client
@@ -113,7 +141,8 @@ while True:
                     client_socket.send(user['header'] + user['data'] + message['header'] + message['data'])
                     # Update database with info catcher
                     database[message['data'].decode('utf-8')] = 2
-        print(database)
+            print(database)
+
     # It's not really necessary to have this, but will handle some socket exceptions just in case
     for notified_socket in exception_sockets:
         # Remove from list for socket.socket()
