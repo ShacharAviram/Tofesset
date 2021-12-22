@@ -71,6 +71,9 @@ def receive_message(client_socket):
         return False
 
 
+loop_num = 1
+
+
 while True:
     read_sockets, _, exception_sockets = select.select(sockets_list, [], sockets_list)
     for notified_socket in read_sockets:
@@ -122,25 +125,33 @@ while True:
             # Begin game on queue!
             if Game_begin:
                 # Getting random catcher
-                loop_num = 1
                 toffes = get_random_catcher(loop_num)
-                # Update database with catcher
-                database[toffes] = 1
-                # TODO Send the catcher he is the catcher
-
-                loop_num += 1
+                # Sending catcher he is the catcher
+                if loop_num == 1:
+                    loop_num += 1
+                    # Update database with catcher
+                    database[toffes] = 1
+                    for client_socket in clients:
+                        # Send it only to referred to client
+                        if clients[client_socket]['data'].decode('utf-8') == toffes:
+                            # Send user and message (both with their headers)
+                            # We are reusing here message header sent by sender, and saved username header send by user when he connected
+                            client_socket.send(user['header'] + 'S'.encode('utf-8') + message['header'] + '1'.encode('utf-8'))
                 if message["data"].decode("utf-8") in '':
                     # Update database
                     database[user["data"].decode("utf-8")] = message["data"].decode("utf-8")
-            # Iterate over connected clients and broadcast message
-            for client_socket in clients:
-                # Send it only to reffered to client
-                if clients[client_socket] == message:
-                    # Send user and message (both with their headers)
-                    # We are reusing here message header sent by sender, and saved username header send by user when he connected
-                    client_socket.send(user['header'] + user['data'] + message['header'] + message['data'])
-                    # Update database with info catcher
-                    database[message['data'].decode('utf-8')] = 2
+                # Iterate over connected clients and broadcast message
+                for client_socket in clients:
+                    # Send it only to reffered to client
+                    # Send catching message, can be sent only by catcher
+                    if clients[client_socket] == message and \
+                            database[user["data"].decode("utf-8")] == 1 and \
+                            user["data"].decode("utf-8") != message["data"].decode('utf-8'):
+                        # Send user and message (both with their headers)
+                        # We are reusing here message header sent by sender, and saved username header send by user when he connected
+                        client_socket.send(user['header'] + user['data'] + message['header'] + '2'.encode('utf-8'))
+                        # Update database with info catcher
+                        database[message['data'].decode('utf-8')] = 2
             print(database)
 
     # It's not really necessary to have this, but will handle some socket exceptions just in case
