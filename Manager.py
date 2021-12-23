@@ -5,7 +5,7 @@ import Client
 import ImageProcessor
 import Indicator
 import time
-
+import errno
 
 class Manager:
     def __init__(self):
@@ -17,6 +17,8 @@ class Manager:
         self.imageprocessor = None  # If I am a catcher
         self.indicator = None
         self.client = Client()
+        self.HEADER_LENGTH = 10
+        # define variable here
 
         #TODO: init_for_player(connection, indications, status)
 
@@ -76,10 +78,13 @@ class Manager:
         4. get verification
         :return: None
         """
+        # add variable to check if game started
+        # send message from catcher to server and back to all players that the game has started
+        # does the catcher wait for another validation from the server?
         while self.client.is_game_started:
-            self.client.check_if_received_return()
+            # self.client.check_if_received_return() In order to verify message, and receive messages
             if self.imageprocessor.catchFromImage()[0] is True:
-                message = (2, self.imageprocessor.catchFromImage()[1])  # status and address
+                message = ('caught', self.imageprocessor.catchFromImage()[1])  # status and address
                 self.client.send_message(bytes('{message}'.format(message=message).encode('utf-8')))  # correct format
             time.sleep(2.3)  # TODO define sleep time via image processing time
 
@@ -90,6 +95,7 @@ class Manager:
         3. change indication
         :return: None
         """
+        # add variable to check if game started
         while self.client.is_game_started:
             # self.check_connection()
             self.client.status = self.client.check_if_received_return()[2]  # TODO: check message format
@@ -97,3 +103,60 @@ class Manager:
                 self.client.send_message(bytes('{message}'.format(message=(1, self.client.name)).encode('utf-8')))
             time.sleep(2.3)  # TODO define sleep time via image processing time
 
+
+    def main_loop_player2(self):
+        """
+        1. check for updates from server
+        2. process message
+        3. change indication
+        :return: None
+        """
+        while self.client.is_game_started:
+
+            try:
+                # Now we want to loop over received messages (there might be more than one) and print them
+                while True:
+
+                    # Receive our "header" containing username length, it's size is defined and constant
+                    username_header = self.client.s.recv(self.HEADER_LENGTH)
+                    # If we received no data, server gracefully closed a connection,
+                    # for example using socket.close() or socket.shutdown(socket.SHUT_RDWR)
+                    if not len(username_header):
+                        print('Connection closed by the server')
+                        exit()
+
+                    # Convert header to int value
+                    username_length = int(username_header.decode('utf-8').strip())
+                    # Receive and decode username
+                    username = self.client.s.recv(username_length).decode('utf-8')
+
+                    # Now do the same for message (as we received username, we received whole message,
+                    # there's no need to check if it has any length)
+                    message_header = self.client.s.recv(self.HEADER_LENGTH)
+                    message_length = int(message_header.decode('utf-8').strip())
+                    message = self.client.s.recv(message_length).decode('utf-8')
+
+                    # Update status
+                    self.client.status = message  # TODO: check message format
+                    if self.client.status == 'caught':
+                        self.client.send_message(bytes('{message}'.format
+                                                       (message=('caught', username)).encode('utf-8')))
+
+            except IOError as e:
+                # This is normal on non blocking connections -
+                #   when there are no incoming data error is going to be raised
+                # Some operating systems will indicate that using AGAIN, and some using WOULDBLOCK error code
+                # We are going to check for both - if one of them -
+                #   that's expected, means no incoming data, continue as normal
+                # If we got different error code - something happened
+                if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
+                    print('Reading error: {}'.format(str(e)))
+                    exit()
+
+                # We just did not receive anything
+                continue
+
+            except Exception as e:
+                # Any other exception - something happened, exit
+                print('Reading error: '.format(str(e)))
+                exit()
