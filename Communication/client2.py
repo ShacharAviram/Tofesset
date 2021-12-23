@@ -1,26 +1,21 @@
 import socket
 import errno
 import sys
+import time
 
 HEADER_LENGTH = 10
 
 IP = "10.0.0.23"
 PORT = 5050
-my_username = '11111'
 
-# Create a socket
-# socket.AF_INET - address family, IPv4, some otehr possible are AF_INET6, AF_BLUETOOTH, AF_UNIX
-# socket.SOCK_STREAM - TCP, conection-based, socket.SOCK_DGRAM - UDP, connectionless, datagrams, socket.SOCK_RAW - raw IP packets
+
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-# Connect to a given ip and port
 client_socket.connect((IP, PORT))
 
 # Set connection to non-blocking state, so .recv() call won;t block, just return some exception we'll handle
 client_socket.setblocking(False)
 
-# Prepare username and header and send them
-# We need to encode username to bytes, then count number of bytes and prepare header of fixed size, that we encode to bytes as well
+my_username = '11111'
 username = my_username.encode('utf-8')
 username_header = f"{len(username):<{HEADER_LENGTH}}".encode('utf-8')
 client_socket.send(username_header + username)
@@ -48,7 +43,7 @@ while True:
             # If we received no data, server gracefully closed a connection, for example using socket.close() or socket.shutdown(socket.SHUT_RDWR)
             if not len(username_header):
                 print('Connection closed by the server')
-                sys.exit()
+                exit()
 
             # Convert header to int value
             username_length = int(username_header.decode('utf-8').strip())
@@ -80,3 +75,38 @@ while True:
         # Any other exception - something happened, exit
         print('Reading error: '.format(str(e)))
         sys.exit()
+
+
+
+def main_loop_catcher(self):
+    """
+    1. check for updates from server
+    2. check if There is a catch (ImageProcessor) (catch from image)
+    3. send to server (if needed)
+    4. get verification
+    :return: None
+    """
+    # add variable to check if game started
+    # send message from catcher to server and back to all players that the game has started
+    # does the catcher wait for another validation from the server?
+    while self.client.is_game_started:
+        # self.client.check_if_received_return() In order to verify message, and receive messages
+        if self.imageprocessor.catchFromImage()[0] is True:
+            message = ('caught', self.imageprocessor.catchFromImage()[1])  # status and address
+            self.client.send_message(bytes('{message}'.format(message=message).encode('utf-8')))  # correct format
+        time.sleep(2.3)  # TODO define sleep time via image processing time
+
+def main_loop_player(self):
+    """
+    1. check for updates from server
+    2. process message
+    3. change indication
+    :return: None
+    """
+    # add variable to check if game started
+    while self.client.is_game_started:
+        # self.check_connection()
+        self.client.status = self.client.check_if_received_return()[2]  # TODO: check message format
+        if self.client.status == 2:
+            self.client.send_message(bytes('{message}'.format(message=(1, self.client.name)).encode('utf-8')))
+        time.sleep(2.3)  # TODO define sleep time via image processing time
