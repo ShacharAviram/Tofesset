@@ -4,8 +4,8 @@
 # cannot import files from other folder
 # create new folder containing all files
 from Client import Client
-# import ImageProcessor
-# import Indicator
+import ImageProcessor
+import Indicator
 import errno
 
 class Manager:
@@ -38,8 +38,8 @@ class Manager:
         Create an Image processor class for the catcher
         :return: None
         """
-        # self.imageprocessor = ImageProcessor.ImageProcess()
-        pass
+        self.imageprocessor = ImageProcessor.ImageProcess()
+
 
     def init_indicator(self, role):
         """
@@ -47,9 +47,9 @@ class Manager:
         :param role:
         :return: None
         """
-        #self.indicator = Indicator.Indicator()
-        #self.indicator.indicate(role)
-        pass
+        self.indicator = Indicator.Indicator()
+        self.indicator.indicate(role)
+
 
     def begin_game(self):
         """
@@ -89,13 +89,13 @@ class Manager:
                 message_header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
                 client_socket.send(message_header + message)
 
-            self.indicator = 'pending'  # make leds go on and off
+            self.indicator.indicate('pending')  # make leds go on and off
             # receive message from catcher to start game
             message_header = self.client.s.recv(self.HEADER_LENGTH)
             message_length = int(message_header.decode('utf-8').strip())
             st_sign_message = self.client.s.recv(message_length).decode('utf-8')
             while st_sign_message == 'start':
-                self.indicator = 'free'  # colored green
+                self.indicator.indicate('free')  # colored green
                 try:
                     # Now we want to loop over received messages (there might be more than one) and print them
                     while True:
@@ -123,7 +123,7 @@ class Manager:
                         self.client.status = message  # TODO: check message format
                         if self.client.status == 'caught':
                             # TODO: Define correct message to indicator in order to change color to red
-                            self.indicator = 'caught'
+                            self.indicator.indicate('caught')
                             self.client.send_message(bytes('{message}'.format
                                                            (message=('caught', username)).encode('utf-8')))
                         print(f'{username} > {message}')
@@ -166,9 +166,9 @@ class Manager:
                 message_header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
                 client_socket.send(message_header + message)
 
-            self.indicator = 'pending'  # make leds go on and off
+            self.indicator.indicate('pending')  # make leds go on and off
             while self.game_start:
-                self.indicator = 'free'  # colored green
+                self.indicator.indicate('free')  # colored green
                 st_message = 'start'
                 self.client.send_message(bytes('{message}'.format(message=st_message).encode('utf-8')))
                 # does the catcher wait for another validation from the server?
@@ -227,4 +227,6 @@ class Manager:
 if __name__ == "__main__":
     manager = Manager()
     manager.init_connection()
+    manager.init_camera_manager()
+    manager.init_indicator()
     manager.main_loop_player()
