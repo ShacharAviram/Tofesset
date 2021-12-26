@@ -5,8 +5,9 @@ import time
 
 HEADER_LENGTH = 10
 
-IP = "10.0.0.23"
+IP = "10.0.0.18"
 PORT = 5050
+
 
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -15,7 +16,7 @@ client_socket.connect((IP, PORT))
 # Set connection to non-blocking state, so .recv() call won;t block, just return some exception we'll handle
 client_socket.setblocking(False)
 
-my_username = '11111'
+my_username = 'd'
 username = my_username.encode('utf-8')
 username_header = f"{len(username):<{HEADER_LENGTH}}".encode('utf-8')
 client_socket.send(username_header + username)
@@ -23,7 +24,7 @@ client_socket.send(username_header + username)
 while True:
 
     # Wait for user to input a message
-    message = input(f'{my_username} > ')  # TODO define wanted message
+    message = ''  # TODO define wanted message
 
     # If message is not empty - send it
     if message:
@@ -40,7 +41,8 @@ while True:
             # Receive our "header" containing username length, it's size is defined and constant
             username_header = client_socket.recv(HEADER_LENGTH)
 
-            # If we received no data, server gracefully closed a connection, for example using socket.close() or socket.shutdown(socket.SHUT_RDWR)
+            # If we received no data, server gracefully closed a connection,
+            # for example using socket.close() or socket.shutdown(socket.SHUT_RDWR)
             if not len(username_header):
                 print('Connection closed by the server')
                 exit()
@@ -51,12 +53,12 @@ while True:
             # Receive and decode username
             username = client_socket.recv(username_length).decode('utf-8')
 
-            # Now do the same for message (as we received username, we received whole message, there's no need to check if it has any length)
+            # Now do the same for message (as we received username,
+            # we received whole message, there's no need to check if it has any length)
             message_header = client_socket.recv(HEADER_LENGTH)
             message_length = int(message_header.decode('utf-8').strip())
             message = client_socket.recv(message_length).decode('utf-8')
 
-            # Print message
             print(f'{username} > {message}')
 
     except IOError as e:
@@ -75,6 +77,7 @@ while True:
         # Any other exception - something happened, exit
         print('Reading error: '.format(str(e)))
         sys.exit()
+
 
 
 

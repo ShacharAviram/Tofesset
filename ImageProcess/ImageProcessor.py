@@ -29,7 +29,7 @@ class ImageProcessor:
             image = self.camera.singleShoot()
             self.catchFromImage(image)
 
-    def catchFromImage(self, image) -> Tuple[bool,object]:
+    def catchFromImage(self, image) -> Tuple[bool, object]:
         #todo - what type is object?
         #todo - define Image class?
         """

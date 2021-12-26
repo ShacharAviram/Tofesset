@@ -3,9 +3,9 @@
 """
 # cannot import files from other folder
 # create new folder containing all files
-import Client
-import ImageProcessor
-import Indicator
+from Client import Client
+# import ImageProcessor
+# import Indicator
 import errno
 
 class Manager:
@@ -17,7 +17,7 @@ class Manager:
         self.mode = None  # Am I a catcher or a player?  0 - free player, 1 - catcher, 2 - caught player
         self.imageprocessor = None  # If I am a catcher
         self.indicator = None
-        self.client = Client()
+        self.client = Client('10.0.0.18', 5050)
         self.HEADER_LENGTH = 10
         # A variable that determines if the game has started.
         # the value is changed by an outer user
@@ -29,8 +29,8 @@ class Manager:
         Make the first connection and update the mode
         :return: None
         """
-        Client.client.connect()
-        self.mode = self.Client.check_if_received_return()
+        self.client.connect()
+        self.mode = self.client.check_if_received_return()
 
 
     def init_camera_manager(self):
@@ -38,8 +38,8 @@ class Manager:
         Create an Image processor class for the catcher
         :return: None
         """
-        self.imageprocessor = ImageProcessor.ImageProcess()
-
+        # self.imageprocessor = ImageProcessor.ImageProcess()
+        pass
 
     def init_indicator(self, role):
         """
@@ -47,9 +47,9 @@ class Manager:
         :param role:
         :return: None
         """
-        self.indicator = Indicator.Indicator()
-        self.indicator.indicate(role)
-
+        #self.indicator = Indicator.Indicator()
+        #self.indicator.indicate(role)
+        pass
 
     def begin_game(self):
         """
@@ -81,13 +81,21 @@ class Manager:
         :return: None
         """
         while True:
+            message = ''
+            # If message is not empty - send it
+            if message:
+                # Encode message to bytes, prepare header and convert to bytes, like for username above, then send
+                message = message.encode('utf-8')
+                message_header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
+                client_socket.send(message_header + message)
 
+            self.indicator = 'pending'  # make leds go on and off
+            # receive message from catcher to start game
             message_header = self.client.s.recv(self.HEADER_LENGTH)
             message_length = int(message_header.decode('utf-8').strip())
             st_sign_message = self.client.s.recv(message_length).decode('utf-8')
-
             while st_sign_message == 'start':
-
+                self.indicator = 'free'  # colored green
                 try:
                     # Now we want to loop over received messages (there might be more than one) and print them
                     while True:
@@ -114,9 +122,11 @@ class Manager:
                         # Update status and print to screen
                         self.client.status = message  # TODO: check message format
                         if self.client.status == 'caught':
+                            # TODO: Define correct message to indicator in order to change color to red
+                            self.indicator = 'caught'
                             self.client.send_message(bytes('{message}'.format
                                                            (message=('caught', username)).encode('utf-8')))
-                        print(message)
+                        print(f'{username} > {message}')
                 # exception for possible errors
                 except IOError as e:
                     # This is normal on non blocking connections -
@@ -147,11 +157,20 @@ class Manager:
         :return: None
         """
         while True:
-            while self.game_start:
 
+            message = ''
+            # If message is not empty - send it
+            if message:
+                # Encode message to bytes, prepare header and convert to bytes, like for username above, then send
+                message = message.encode('utf-8')
+                message_header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
+                client_socket.send(message_header + message)
+
+            self.indicator = 'pending'  # make leds go on and off
+            while self.game_start:
+                self.indicator = 'free'  # colored green
                 st_message = 'start'
-                self.client.send_message(
-                    bytes('{message}'.format(message=st_message).encode('utf-8')))
+                self.client.send_message(bytes('{message}'.format(message=st_message).encode('utf-8')))
                 # does the catcher wait for another validation from the server?
                 try:
                     # Now we want to loop over received messages (there might be more than one) and print them
@@ -177,7 +196,7 @@ class Manager:
                         message = self.client.s.recv(message_length).decode('utf-8')
 
                         # print message to the screen
-                        print(message)
+                        print(f'{username} > {message}')
                         # check if received information from data processing, if so, send to server
                         if self.imageprocessor.catchFromImage()[0] is True:
                             snd_message = ('caught', self.imageprocessor.catchFromImage()[1])  # status and address
