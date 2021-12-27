@@ -4,7 +4,7 @@ import random
 
 HEADER_LENGTH = 10
 
-IP = "127.0.0.1"
+IP = "10.60.4.245"
 PORT = 5050
 Game_begin = False
 
