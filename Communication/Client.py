@@ -6,7 +6,7 @@ import socket
 import time
 import errno
 
-HOST = '10.0.0.18'  # The server's hostname or IP address
+HOST = '10.60.4.245'  # The server's hostname or IP address
 PORT = 5050  # The port used by the server
 HEADER_LENGTH = 10
 
@@ -135,7 +135,7 @@ class Client:
                         print(message)
                 # exception for possible errors
                 except IOError as e:
-                    # This is normal on non blocking connections -
+                    # This is normal on nonblocking connections -
                     #   when there are no incoming data error is going to be raised
                     # Some operating systems will indicate that using AGAIN, and some using WOULDBLOCK error code
                     # We are going to check for both - if one of them -
@@ -154,5 +154,6 @@ class Client:
                     exit()
 
 if __name__ == "__main__":
-    client1 = Client('10.0.0.18', 5050)
-    client1.main_loop_player()
+    #client1 = Client('10.0.0.18', 5050)
+    #client1.main_loop_player()
+    pass

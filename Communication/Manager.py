@@ -4,8 +4,8 @@
 # cannot import files from other folder
 # create new folder containing all files
 from Client import Client
-import ImageProcessor
-import Indicator
+#import ImageProcessor
+#import Indicator
 import errno
 
 class Manager:
@@ -15,9 +15,9 @@ class Manager:
         contains player's status
         """
         self.mode = None  # Am I a catcher or a player?  0 - free player, 1 - catcher, 2 - caught player
-        self.imageprocessor = None  # If I am a catcher
-        self.indicator = None
-        self.client = Client('10.0.0.18', 5050)
+        #self.imageprocessor = None  # If I am a catcher
+        #self.indicator = None
+        self.client = Client('10.60.4.245', 5050)
         self.HEADER_LENGTH = 10
         # A variable that determines if the game has started.
         # the value is changed by an outer user
@@ -38,8 +38,8 @@ class Manager:
         Create an Image processor class for the catcher
         :return: None
         """
-        self.imageprocessor = ImageProcessor.ImageProcess()
-
+        #self.imageprocessor = ImageProcessor.ImageProcess()
+        pass
 
     def init_indicator(self, role):
         """
@@ -47,9 +47,9 @@ class Manager:
         :param role:
         :return: None
         """
-        self.indicator = Indicator.Indicator()
-        self.indicator.indicate(role)
-
+        #self.indicator = Indicator.Indicator()
+        #self.indicator.indicate(role)
+        pass
 
     def begin_game(self):
         """
@@ -227,6 +227,6 @@ class Manager:
 if __name__ == "__main__":
     manager = Manager()
     manager.init_connection()
-    manager.init_camera_manager()
-    manager.init_indicator()
+    #manager.init_camera_manager()
+    #manager.init_indicator()
     manager.main_loop_player()
