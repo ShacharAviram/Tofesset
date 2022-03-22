@@ -1,0 +1,9 @@
+RED_PIN = 5
+GREEN_PIN = 7
+BLUE_PIN = 6
+RESET_BUTTON_PIN = 8
+CATCHER_PINS = [1, 2, 3, 4]
+CAUGHT_SOUND = 'sounds/caught.wav'
+CONNECTED_SOUND = 'sounds/connected.wav'
+START = 11
+PLAYER_CAUGHT = 12  # for player and server use
