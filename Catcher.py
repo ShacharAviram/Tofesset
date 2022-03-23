@@ -3,6 +3,7 @@ import select
 from ImageProcess.ImageProcessor import ImageProcessor
 from Constants import *
 import bluetooth
+import time
 
 
 hostMACAddress = '8c:c8:4b:80:50:42'  # The MAC address of a Bluetooth adapter on the server.
@@ -23,11 +24,25 @@ database = dict()
 player_list = [False, False, False, False]
 
 
-def get_player_list(dictionary):
+def get_player_address_list(dictionary):
+    """
+    :param dictionary: database of players in game
+    :return: List of mac addresses of all players
+    """
     mylist = []
     for key in dictionary.keys():
-        mylist.append(key)
+        mylist.append(dictionary[key][0])
     return mylist
+
+
+def set_database(player_dictionary, player_name, status):
+    """
+    :param player_dictionary: The dictionary we want to update
+    :param player_name: The name of the player
+    :param status: The new status we want to set
+    :return: None
+    """
+    player_dictionary[player_name][1] = status
 
 
 def is_caught():
@@ -40,10 +55,11 @@ def is_caught():
     # check if a player is considered caught, send message and wait for validation
     # assuming the received data is in the following format: (bool, id)
     for returned_data in ImageProcessor.ImageProcessor.return_data():
-        if returned_data[0]:
-            database[returned_data[1]][1] = 1  # set player status as caught
+        player_is_caught = returned_data[0]
+        if player_is_caught:
+            set_database(database, returned_data[1], 1)  # set player status as caught
             # send message to client and find relevant id address
-            for client in clients:
+            for client in get_player_address_list(database):
                 if client == returned_data[1]:
                     # send relevant message to client
                     client.send(int_to_bytes(PLAYER_CAUGHT))
@@ -67,7 +83,7 @@ def configure_connections():
     for i in range(1, 5):
         client_mac, client_port = s.accept()
         if client:
-            name = client.recv(1024)
+            name = client_mac.recv(1024)
             database[name] = [client_mac, 0]
             player_list[i] = True
             check_game_button(database)
@@ -96,7 +112,7 @@ def reset_game(player_dict):
     :return: returns the database dictionary with reset status
     """
     for player in player_dict:
-        player_dict[player][1] = 0
+        set_database(player_dict, player, 0)
 
 
 def int_from_bytes(binary_data):
@@ -138,6 +154,9 @@ def game_loop():
     while game_button() and check_game_end():
         # check if player is caught
         is_caught()
+        # wait 0.3 sec before rerunning loop
+        time.sleep(0.3)
+
 
 # game loop
 try:
@@ -167,8 +186,7 @@ if __name__ == "__main__":
     # 2. make real game loop.
     # configure connection - נעבור על זה ביחד
     # 3. pass all Constants to Constants file
-    # 4. line 43 - change to const
-    # line 70 - what is client
-    #limit line 51 loop (מפחד שניתקע שם לנצח)
+    # 4. line 43 - change to const.....................***נראה לי שהושלם***
+    # limit line 51 loop (מפחד שניתקע שם לנצח)
 
 
