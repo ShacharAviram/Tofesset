@@ -1,6 +1,7 @@
 import socket
 import select
 from ImageProcess.ImageProcessor import ImageProcessor
+from Constants import *
 import bluetooth
 
 
@@ -45,11 +46,11 @@ def is_caught():
             for client in clients:
                 if client == returned_data[1]:
                     # send relevant message to client
-                    client.send(int_to_bytes(PlAYER_CAUGHT))
+                    client.send(int_to_bytes(PLAYER_CAUGHT))
 
                 while not(client.recv(1024)):
                     print('waiting for validation')
-                    client.send(int_to_bytes(PlAYER_CAUGHT))
+                    client.send(int_to_bytes(PLAYER_CAUGHT))
                     print('sent another message')
         else:
             pass
@@ -163,3 +164,11 @@ if __name__ == "__main__":
 
     # TODO: until 28/3/22
     # 1. check with actual client
+    # 2. make real game loop.
+    # configure connection - נעבור על זה ביחד
+    # 3. pass all Constants to Constants file
+    # 4. line 43 - change to const
+    # line 70 - what is client
+    #limit line 51 loop (מפחד שניתקע שם לנצח)
+
+
