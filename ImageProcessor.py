@@ -1,8 +1,8 @@
 #import cv2
 from PIL import Image
-from pupil_apriltags import Detector
-from time import sleep
-from picamera import PiCamera
+# from pupil_apriltags import Detector
+# from time import sleep
+# from picamera import PiCamera
 from numpy import tan
 
 class TagReader:
@@ -12,13 +12,13 @@ class TagReader:
         self.TAG_MARGIN = 5
         self.TAG_DISTANCE = 1
         self.PATH_TO_IMAGES = "/temp_image.jpg"
-        self.TAG_DETECTOR = Detector("tag16h5")
+        # self.TAG_DETECTOR = Detector("tag16h5")
         self.WIDTH_OF_IMAGE = 2592
         self.HEIGHT_OF_IMAGE = 1944
         self.VERTICAL_FIELD_OF_VIEW = 48.8
         self.HORIZONTAL_FIELD_OF_VIEW = 62.2
-        self.camera = PiCamera()
-        self.camera.resolution = (self.WIDTH_OF_IMAGE, self.HEIGHT_OF_IMAGE)
+        # self.camera = PiCamera()
+        # self.camera.resolution = (self.WIDTH_OF_IMAGE, self.HEIGHT_OF_IMAGE)
 
 
     def refrash_image(self)-> None:
@@ -27,8 +27,8 @@ class TagReader:
         :return: True if the image was refrashed
         '''
         self.camera.start_preview()
-        sleep(2) # Camera warm-up time
-        self.camera.capture(PATH_TO_IMAGES ,use_video_port=True)
+        # sleep(2) # Camera warm-up time
+        # self.camera.capture(PATH_TO_IMAGES ,use_video_port=True)
         self.camera.stop_preview()
 
     def calc_tag_distance(self , det):
@@ -46,7 +46,7 @@ class TagReader:
         h_right = det[1][1] - det[2][1]
         theta1_right = 0
         theta2_right = 0
-        d_right = h_riught / (tan(theta1_right+theta2_right) - tan(theta1_right))
+        d_right = h_right / (tan(theta1_right+theta2_right) - tan(theta1_right))
         
         return (d_right + d_left) / 2
 
@@ -59,15 +59,15 @@ class TagReader:
         '''
         data_list = []
         self.refrash_image()
-        image = cv2.imread(self.PATH_TO_IMAGES, cv2.IMREAD_GRAYSCALE)
-        dets = self.TAG_DETECTOR.detect(image)
+        # image = cv2.imread(self.PATH_TO_IMAGES, cv2.IMREAD_GRAYSCALE)
+        # dets = self.TAG_DETECTOR.detect(image)
 
-        for det in dets:
-            if det.tag_id <= max_tags_in_game and det.decision_margin > self.TAG_MARGIN:
-                det_dist = self.calc_tag_distance(det)
-                det_dist = None
-                if det_dist > self.TAG_DISTANCE:
-                    data_list.append((det.tag_id, det_dist))
+        # for det in dets:
+        #     if det.tag_id <= max_tags_in_game and det.decision_margin > self.TAG_MARGIN:
+        #         det_dist = self.calc_tag_distance(det)
+        #         det_dist = None
+        #         if det_dist > self.TAG_DISTANCE:
+        #             data_list.append((det.tag_id, det_dist))
         return data_list
 
 if __name__ == "__main__":
