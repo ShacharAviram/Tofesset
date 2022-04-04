@@ -23,6 +23,7 @@ class Indicator:
         # set up the LEDs as output
         for LED in self.CATCHER_PINS:
             GPIO.setup(LED, GPIO.OUT)
+        pass
 
     def control_catcher_LED_array(self, players: list):
         """
@@ -34,6 +35,7 @@ class Indicator:
                 GPIO.output(self.CATCHER_PINS[i], GPIO.HIGH)
             else:
                 GPIO.output(self.CATCHER_PINS[i], GPIO.LOW)
+        pass
 
     def is_reset_button_pressed(self):
         """
@@ -41,3 +43,12 @@ class Indicator:
         you can figure out what it does, right?
         """
         return GPIO.input(self.RESET_BUTTON) == GPIO.HIGH
+
+      def turn_off_LED(self):
+            """
+            :param LED: RED, BLUE, GREEN or NONE
+            :return: NONE
+            turns that LED on and turns off the rest of them
+            """
+            for pin in self.PLAYER_PINS:
+                GPIO.output(pin, GPIO.LOW)

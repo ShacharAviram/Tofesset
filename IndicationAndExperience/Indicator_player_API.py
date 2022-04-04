@@ -6,15 +6,11 @@ player:
 """
 import RPi.GPIO as GPIO
 import playsound
+from Constants import *
 
 
 class Indicator:
-    RED_PIN = 5
-    GREEN_PIN = 6
-    BLUE_PIN = 7
-    PLAYER_PINS = RED_PIN, GREEN_PIN, BLUE_PIN
-    CAUGHT_SOUND = 9
-    CONNECTED_SOUND = 10
+    PLAYER_PINS = [RED_PIN, GREEN_PIN, BLUE_PIN]
 
     def __init__(self):
         """
@@ -49,3 +45,12 @@ class Indicator:
         playsound.playsound(sound)
 
         pass
+
+    def turn_off_LED(self):
+        """
+        :param LED: RED, BLUE, GREEN or NONE
+        :return: NONE
+        turns that LED on and turns off the rest of them
+        """
+        for pin in self.PLAYER_PINS:
+            GPIO.output(pin, GPIO.LOW)
