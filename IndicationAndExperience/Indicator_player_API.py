@@ -42,7 +42,7 @@ class Indicator:
         :param sound: what sound needs to be played: CAUGHT or CONNECTED
         :return: NONE
         """
-        playsound.playsound(sound)
+        playsound.playsound(sound, block=False)
 
         pass
 

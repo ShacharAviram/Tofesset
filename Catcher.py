@@ -4,28 +4,31 @@ import time
 import ImageProcessor
 from Constants import *
 from IndicationAndExperience.Indicator_catcher_API import Indicator
+import select
 
 
-
-hostMACAddress = SERVER_MAC  # The MAC address of a Bluetooth adapter on the server.
-port = COMMUNICATION_PORT
 backlog = 4  # number of devices we can connect to (can be changed)
 size = 1024
 
-
+#DATABASE VISION:
+#client_to_tag => {Client_Address:tagID}
+#client_to_status => {Client_Address:Player_Status,...}
 
 class Catcher:
     def __init__(self):
-        self.s = bluetooth.BluetoothSocket()
-        self.s.bind((hostMACAddress, port))
-        self.s.listen(backlog)
-
-        # Current player status data structure
-        self.database = dict()
+        try:
+            self.server = bluetooth.BluetoothSocket()
+            self.server.bind((SERVER_MAC, COMMUNICATION_PORT))
+            self.server.listen(backlog)
+        except Exception as e: raise ConnectionError("Server can't bind and set...")
         # connection list of players (client1, client2, client3, client4)
-        self.player_list = [False, False, False, False]
+        self.client_to_tag = dict()
+        self.client_to_status = dict()
+        self.active_client_sockets = [] #TODO: check how to hold all active channels and know when client becomes unactive
+        self.messages_to_send = []
         self.Indicator = Indicator()
         self.Image_processor = ImageProcessor.TagReader()
+        self.game_mode = None #None, or one of the gamemodes (see constants file)
 
     def get_player_address(self, player_name):
         """
@@ -34,7 +37,6 @@ class Catcher:
         :return: mac addresses of given player
         """
         return self.database[player_name][0]
-
 
     def set_database(self, player_name, status):
         """
@@ -45,37 +47,45 @@ class Catcher:
         """
         self.database[player_name][1] = status
 
+    def tagid_to_client(self, tagid):
+        for key, value in self.client_to_tag.items():
+            if tagid == value:
+                return key
+        print("No Player as such Connected...May try again to process image")
+        return None
 
     def is_caught(self):
         """
         check if any player is caught, if so:
         1. change player status in database
-        2. send message to client
-        3. wait for eco from client, else, (after 3 seconds) turn to IndicationAndExperience
-        :return: None
+        :return: list of clients that were caught
         """
         # check if a player is considered caught, send message and wait for validation
         for returned_data in self.Image_processor.return_data():
-            player_is_caught = returned_data[0]
-            if player_is_caught:
-                self.set_database(returned_data[1], PLAYER_CAUGHT)  # set player status as caught
-                # send message to client and find relevant id address
-                caught_player_mac_address = self.get_player_address(returned_data[1])
-                caught_player_mac_address.send(self.int_to_bytes(PLAYER_CAUGHT))
-                # try to send message for at most 3 whole seconds
-                iteration = 0
-                while not(client.recv(1024)) and iteration <= 9:
-                    iteration += 1
-                    print('waiting for validation')
-                    client.send(self.int_to_bytes(PLAYER_CAUGHT))
-                    print('sent another message')
-                    time.sleep(0.3)
-                # do we want to do something if message wasn't received?
-                if iteration == 10:
-                    # do something in IndicationAndExperience...?
-                    pass
-            else:
-                pass
+            tagid, distance = returned_data
+            current_client = self.tagid_to_client(tagid)
+            if distance < CATCH_DISTANCE and self.client_to_status[current_client] == PLAYER_FREE: #if tag is close enough AND not caught yet:
+                self.messages_to_send.append((current_client, self.int_to_bytes(PLAYER_CAUGHT)))
+                self.client_to_status[current_client] = PLAYER_CAUGHT
+
+                # player_is_caught = returned_data[0]
+                # if player_is_caught:
+                #     self.set_database(returned_data[1], PLAYER_CAUGHT)  # set player status as caught
+                #     # send message to client and find relevant id address
+                #     caught_player_mac_address = self.get_player_address(returned_data[1])
+                #     caught_player_mac_address.send(self.int_to_bytes(PLAYER_CAUGHT))
+                #     # try to send message for at most 3 whole seconds
+                #     iteration = 0
+                #     while not(client.recv(1024)) and iteration <= 9:
+                #         iteration += 1
+                #         print('waiting for validation')
+                #         client.send(self.int_to_bytes(PLAYER_CAUGHT))
+                #         print('sent another message')
+                #         time.sleep(0.3)
+                #     # do we want to do something if message wasn't received?
+                #     if iteration == 10:
+                #         # do something in IndicationAndExperience...?
+                #         pass
 
 
     def configure_connections(self):
@@ -85,25 +95,26 @@ class Catcher:
         3. calls reset_game() in end
         :return: None
         """
-        print("started configuration")
-        # connect players - maximum four with break option
-        while len(self.database) <= 4 and not(self.Indicator.is_reset_button_pressed()):
-            try:
-                client_mac, client_port = self.s.accept()
-                name = client_mac.recv(1024)     # receive name from player
-                print(self.int_from_bytes(name))
-                self.database[name] = [client_mac, 0]     # mac address and starting status
-                self.player_list[len(self.database)-1] = True  # "len(database)-1" index in list
-                self.check_game_button()
-            except bluetooth.BluetoothError:
-                break
-        # send each player a 'start' message
-        else:
-            for player in self.database:
-                player_address = self.get_player_address(player)
-                player_address.send(START)
-        # reset player's status
-        self.reset_game(self.database)
+        # print("started configuration")
+        # # connect players - maximum four with break option
+        # while len(self.database) <= 4 and not(self.Indicator.is_reset_button_pressed()):
+        #     try:
+        #         client_mac, client_port = self.s.accept()
+        #         name = client_mac.recv(1024)     # receive name from player
+        #         print(self.int_from_bytes(name))
+        #         self.database[name] = [client_mac, 0]     # mac address and starting status
+        #         self.player_list[len(self.database)-1] = True  # "len(database)-1" index in list
+        #         self.check_game_button()
+        #     except bluetooth.BluetoothError:
+        #         break
+        # # send each player a 'start' message
+        # else:
+        #     for player in self.database:
+        #         player_address = self.get_player_address(player)
+        #         player_address.send(START)
+        # # reset player's status
+        # self.reset_game(self.database)
+        pass
 
     def check_game_button(self):
         """
@@ -155,6 +166,25 @@ class Catcher:
         else:
             return True
 
+    def wake_up(self):
+        self.Indicator.play_sound(WAKE_UP_BEEP)
+
+    def add_new_client_to_DB(self, connection, tagid):
+        self.active_client_sockets.append(connection)
+        self.client_to_status[connection] = PLAYER_FREE
+        self.client_to_tag[connection] = tagid
+
+        #todo: solve conflicts when client re-connect
+
+    def start_the_game(self):
+        for client in self.active_client_sockets:
+            self.messages_to_send.append((client, self.int_to_bytes(START)))
+
+    def reset_to_default_setup(self):
+        self.Indicator.play_sound(WAKE_UP_BEEP)
+        for client in self.active_client_sockets:
+            self.client_to_status[client] = PLAYER_FREE
+            self.messages_to_send.append((client, PLAYER_FREE))
 
     def game_loop(self):
         """
@@ -166,15 +196,48 @@ class Catcher:
         2. wait 0.3 seconds
         :return: None
         """
-        while not Indicator.is_reset_button_pressed() and self.check_game_end():
-            # check if player is caught
-            self.is_caught()
-            # wait 0.3 sec before rerunning loop
-            time.sleep(0.3)
+        while True:
+            if self.game_mode:
+                self.is_caught()
+
+            rlist, wlist, xlist = select.select([self.server] + self.active_client_sockets, self.active_client_sockets, [])
+            for current_socket in rlist:
+                if current_socket is self.server:
+                    connection, client_address = current_socket.accept()
+                    new_tagid = current_socket.recv(BUFFER_SIZE)
+                    print("New client joined!", client_address, "and tagID is", new_tagid)
+                    self.add_new_client_to_DB(connection, new_tagid)
+                    # print_client_sockets(client_sockets)
+                else:
+                    try:
+                        data = self.int_from_bytes(current_socket.recv(BUFFER_SIZE))
+                    except socket.error as e:
+                        print("Connection closed", current_socket)
+                        self.active_client_sockets.remove(current_socket)
+                        current_socket.close()
+
+            for message in self.messages_to_send:
+                current_socket, data = message
+                if current_socket in wlist:
+                    current_socket.send(self.int_to_bytes(data))
+                    self.messages_to_send.remove(message)
+
+            if self.Indicator.is_reset_button_pressed():
+                self.reset_to_default_setup()
+
+
+        # while not self.reset_state:# and self.check_game_end():
+        #     # check if player is caught
+        #     self.is_caught()
+        #     # wait 0.3 sec before rerunning loop
+        #     time.sleep(0.3)
+        #     self.reset_state = self.Indicator.is_reset_button_pressed()
 
 
 if __name__ == "__main__":
     game_module = Catcher()
+    game_module.wake_up()
+    game_module.game_loop()
     # try:
     #     # set up in order for the game to function properly connection set up
     #     game_module.configure_connections()
@@ -184,4 +247,3 @@ if __name__ == "__main__":
     # except ConnectionError:
     #     # print("Closing socket")
     #     game_module.s.close()
-    game_module.configure_connections()
