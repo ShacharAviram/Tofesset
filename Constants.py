@@ -25,10 +25,13 @@ COMMUNICATION_PORT = 5
 BUFFER_SIZE = 128
 
 # Systems IDs
-ID_1 = 7
-ID_2 = 8
-ID_3 = 9
-ID_4 = 10
+ID_1 = 141
+ID_2 = 592
+ID_3 = 653
+ID_4 = 589
+
+# system ID list
+ID_LIST = [ID_1, ID_2, ID_3, ID_4]
 
 # Game Modes
 CATCH_EM_ALL = 333
