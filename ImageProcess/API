@@ -1,0 +1,9 @@
+API
+To get the list of the tuple of the IDs and the distance in centimeters write the following commands:
+
+    scanner = TagReader()
+    det_list = scanner.return_data(max_tags_in_game)
+    
+and to run over the list use a for loop:
+
+    for tup in det_list:
