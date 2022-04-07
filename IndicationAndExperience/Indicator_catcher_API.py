@@ -4,8 +4,8 @@ catcher:
 2. function that checks the reset_game button and returns True or False
 
 """
-import RPi.GPIO as GPIO
-
+#import RPi.GPIO as GPIO
+import playsound
 
 class Indicator:
     CATCHER_PINS = [1, 2, 3, 4]
@@ -44,11 +44,21 @@ class Indicator:
         """
         return GPIO.input(self.RESET_BUTTON) == GPIO.HIGH
 
-      def turn_off_LED(self):
-            """
-            :param LED: RED, BLUE, GREEN or NONE
-            :return: NONE
-            turns that LED on and turns off the rest of them
-            """
-            for pin in self.PLAYER_PINS:
-                GPIO.output(pin, GPIO.LOW)
+    def turn_off_LED(self):
+        """
+        :param LED: RED, BLUE, GREEN or NONE
+        :return: NONE
+        turns that LED on and turns off the rest of them
+        """
+        for pin in self.PLAYER_PINS:
+            GPIO.output(pin, GPIO.LOW)
+
+
+    def play_sound(self, sound: str):
+        """
+        :param sound: what sound needs to be played: CAUGHT or CONNECTED
+        :return: NONE
+        """
+        playsound.playsound(sound, block=False)
+
+        pass
