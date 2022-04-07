@@ -4,7 +4,7 @@ catcher:
 2. function that checks the reset_game button and returns True or False
 
 """
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 import playsound
 
 class Indicator:
