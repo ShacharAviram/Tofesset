@@ -3,11 +3,10 @@ from PIL import Image
 # from TagReader import TagReader
 from pupil_apriltags import Detector
 from math import sin, radians
-# todo: import picamara
 from time import sleep
 
 
-# from picamera import PiCamera
+from picamera import PiCamera
 
 
 class TagReader:
@@ -18,26 +17,36 @@ class TagReader:
         self.TAG_DISTANCE = 100
         # todo: change the path to the images
         # self.PATH_TO_IMAGES = "/tmp/curr_image"
-        self.PATH_TO_IMAGES = "/tmp/curr_image.jpg"
+        self.PATH_TO_IMAGES = '/home/pi/Desktop/maxn.jpg'
         self.TAG_DETECTOR = Detector("tag16h5")
-        self.WIDTH_OF_IMAGE = 3280
-        self.HEIGHT_OF_IMAGE = 2464
+        self.WIDTH_OF_IMAGE = 2592
+        self.HEIGHT_OF_IMAGE = 1944
         self.VERTICAL_FIELD_OF_VIEW = 48.8
         self.HORIZONTAL_FIELD_OF_VIEW = 62.2
-        self.SIZE_CONST = 18
-        # self.CAMERA = PiCamera()
-        # self.CAMERA.resolution = (self.WIDTH_OF_IMAGE, self.HEIGHT_OF_IMAGE)
-        #self.CAMERA.start_preview()
-
+        self.SIZE_CONST = 14
+        #self.CAMERA = PiCamera()
+        #self.CAMERA.resolution = (self.WIDTH_OF_IMAGE, self.HEIGHT_OF_IMAGE)
+        self.camera = PiCamera()
+        self.camera.resolution = (self.WIDTH_OF_IMAGE, self.HEIGHT_OF_IMAGE)
+        self.camera.framerate = 15
+        self.camera.start_preview()
 
     def refrash_image(self) -> None:
         '''
         Refrash the image
         :return: True if the image was refrashed
-        '''
+       
         # todo: create the object in the __init__
         '''
-        camera.capture(self.PATH_TO_IMAGES)
+        self.camera.capture(self.PATH_TO_IMAGES)
+
+        #self.camera.stop_preview()
+        '''
+        self.CAMERA.start_preview()
+        sleep(1)
+        self.CAMERA.capture("/home/pi/Desktop/p.jpg")
+#        self.CAMARA.stop_preview()
+
         '''
 
     def calc_tag_distance(self, det):
@@ -62,7 +71,14 @@ class TagReader:
 
     def set_image_path(self, path):
         self.PATH_TO_IMAGES = path
+    
+    def stop_preview(self):
+        self.camera.stop_preview()
+        
+    def start_preview(self):
+        self.camera.start_preview()
 
+    
     def return_data(self, max_tags_in_game=5) -> list:
         '''
         Returns a tuple of the form (tag_id, tag_position) of the biggest tag in the image.
@@ -70,11 +86,11 @@ class TagReader:
         :param max_tags_in_game: the maximum number of tags in the game
         :return: a dictionary with the tag_id and tag_position of all the images with a margin + possibility
         '''
+
         data_list = []
         self.refrash_image()
         image = cv2.imread(self.PATH_TO_IMAGES, cv2.IMREAD_GRAYSCALE)
         dets = self.TAG_DETECTOR.detect(image)
-
         for det in dets:
             if det.tag_id <= max_tags_in_game and det.decision_margin > self.TAG_MARGIN:
                 det_dist = self.calc_tag_distance(det.corners)
@@ -87,6 +103,8 @@ if __name__ == "__main__":
     print("reads tags")
     scanner = TagReader()
     det_list = scanner.return_data(5)
+    scanner.stop_preview()
     for tup in det_list:
         print(tup)
     print("done")
+
