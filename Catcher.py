@@ -10,9 +10,9 @@ import select
 backlog = 4  # number of devices we can connect to (can be changed)
 size = 1024
 
-#DATABASE VISION:
-#client_to_tag => {Client_Address:tagID}
-#client_to_status => {Client_Address:Player_Status,...}
+# DATABASE VISION:
+# client_to_tag => {Client_Address:tagID}
+# client_to_status => {Client_Address:Player_Status,...}
 
 class Catcher:
     def __init__(self):
@@ -20,32 +20,32 @@ class Catcher:
             self.server = bluetooth.BluetoothSocket()
             self.server.bind((SERVER_MAC, COMMUNICATION_PORT))
             self.server.listen(backlog)
-        except Exception as e: raise ConnectionError("Server can't bind and set...")
+        except Exception as e:
+            raise ConnectionError("Server can't bind and set...")
         # connection list of players (client1, client2, client3, client4)
         self.client_to_tag = dict()
         self.client_to_status = dict()
-        self.active_client_sockets = [] #TODO: check how to hold all active channels and know when client becomes unactive
+        # TODO: check how to hold all active channels and know when client becomes inactive
+        self.active_client_sockets = []
         self.messages_to_send = []
         self.Indicator = Indicator()
         self.Image_processor = ImageProcessor.TagReader()
-        self.game_mode = None #None, or one of the gamemodes (see constants file)
+        self.game_mode = None  # None, or one of the game-modes (see constants file)
 
-    def get_player_address(self, player_name):
+    def get_player_address(self, connection):
         """
-        :param player_name: the name of the player
-        :param dictionary: database of players in game
+        :param connection: the name of the player
         :return: mac addresses of given player
         """
-        return self.database[player_name][0]
+        return self.client_to_tag[connection]
 
-    def set_database(self, player_name, status):
+    def set_status_database(self, connection, status):
         """
-        :param player_dictionary: The dictionary we want to update
-        :param player_name: The name of the player
+        :param connection: The name of the player
         :param status: The new status we want to set
         :return: None
         """
-        self.database[player_name][1] = status
+        self.client_to_status[connection] = status
 
     def tagid_to_client(self, tagid):
         for key, value in self.client_to_tag.items():
@@ -64,7 +64,8 @@ class Catcher:
         for returned_data in self.Image_processor.return_data():
             tagid, distance = returned_data
             current_client = self.tagid_to_client(tagid)
-            if distance < CATCH_DISTANCE and self.client_to_status[current_client] == PLAYER_FREE: #if tag is close enough AND not caught yet:
+            if distance < CATCH_DISTANCE and self.client_to_status[current_client] == PLAYER_FREE:
+                # if tag is close enough AND not caught yet:
                 self.messages_to_send.append((current_client, self.int_to_bytes(PLAYER_CAUGHT)))
                 self.client_to_status[current_client] = PLAYER_CAUGHT
 
@@ -118,12 +119,11 @@ class Catcher:
 
     def check_game_button(self):
         """
-        :param player_dict: dictionary with player info
         check if reset_game_button was pressed, if so, reset all player's status
         :return: True or None
         """
         if self.Indicator.is_reset_button_pressed() is True:
-            self.reset_game(self.database)
+            self.reset_game(self.client_to_status)
             return True
 
 
@@ -136,7 +136,7 @@ class Catcher:
         :return: returns the database dictionary with reset status
         """
         for player in player_dict:
-            self.set_database(player, PLAYER_FREE)
+            self.set_status_database(player, PLAYER_FREE)
 
 
     def int_from_bytes(self, binary_data):
@@ -160,31 +160,49 @@ class Catcher:
         check if all players are caught, True is returned if so
         :return: bool
         """
-        for player in self.database:
-            if self.database[player][1] == 0:
+        for player in self.client_to_status:
+            if self.client_to_status[player] == 0:
                 return False
         else:
             return True
 
+
     def wake_up(self):
+        """
+        Make wakeup sound
+        :return: None
+        """
         self.Indicator.play_sound(WAKE_UP_BEEP)
 
+
     def add_new_client_to_DB(self, connection, tagid):
+        """
+        Updates list of active clients and databases
+        :param connection: Bluetooth socket
+        :param tagid: The players ID
+        :return: None
+        """
         self.active_client_sockets.append(connection)
         self.client_to_status[connection] = PLAYER_FREE
         self.client_to_tag[connection] = tagid
+        # Todo: solve conflicts when client re-connect
 
-        #todo: solve conflicts when client re-connect
 
     def start_the_game(self):
+        """
+        Sends each player a message to indicate that the game has started
+        :return: None
+        """
         for client in self.active_client_sockets:
             self.messages_to_send.append((client, self.int_to_bytes(START)))
+
 
     def reset_to_default_setup(self):
         self.Indicator.play_sound(WAKE_UP_BEEP)
         for client in self.active_client_sockets:
             self.client_to_status[client] = PLAYER_FREE
             self.messages_to_send.append((client, PLAYER_FREE))
+
 
     def game_loop(self):
         """
@@ -200,7 +218,8 @@ class Catcher:
             if self.game_mode:
                 self.is_caught()
 
-            rlist, wlist, xlist = select.select([self.server] + self.active_client_sockets, self.active_client_sockets, [])
+            rlist, wlist, xlist = select.select([self.server] + self.active_client_sockets,
+                                                self.active_client_sockets, [])
             for current_socket in rlist:
                 if current_socket is self.server:
                     connection, client_address = current_socket.accept()
