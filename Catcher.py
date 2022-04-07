@@ -153,7 +153,7 @@ class Catcher:
         self.Indicator.play_sound(WAKE_UP_BEEP)
         for client in self.active_client_sockets:
             self.client_to_status[client] = PLAYER_FREE
-            self.messages_to_send.append((client, PLAYER_FREE))
+            self.messages_to_send.append((client, START))
 
 
     def game_loop(self):
@@ -182,6 +182,7 @@ class Catcher:
                     try:
                         data = self.int_from_bytes(current_socket.recv(BUFFER_SIZE))
                         if data in ID_LIST:
+                            current_socket.send(self.int_to_bytes(CATCH_EM_ALL))
                             print("And tag ID is:", data)
                             self.add_new_client_to_DB(self.active_client_sockets[-1], data)
                             # print_client_sockets(client_sockets)
