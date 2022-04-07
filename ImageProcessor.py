@@ -23,13 +23,13 @@ class TagReader:
         self.HEIGHT_OF_IMAGE = 1944
         self.VERTICAL_FIELD_OF_VIEW = 48.8
         self.HORIZONTAL_FIELD_OF_VIEW = 62.2
-        self.SIZE_CONST = 14
+        self.SIZE_CONST = 19
         #self.CAMERA = PiCamera()
         #self.CAMERA.resolution = (self.WIDTH_OF_IMAGE, self.HEIGHT_OF_IMAGE)
         self.camera = PiCamera()
         self.camera.resolution = (self.WIDTH_OF_IMAGE, self.HEIGHT_OF_IMAGE)
         self.camera.framerate = 15
-        self.camera.start_preview()
+        #self.camera.start_preview()
 
     def refrash_image(self) -> None:
         '''
@@ -38,9 +38,10 @@ class TagReader:
        
         # todo: create the object in the __init__
         '''
+        self.camera.start_preview()
         self.camera.capture(self.PATH_TO_IMAGES)
 
-        #self.camera.stop_preview()
+        self.camera.stop_preview()
         '''
         self.CAMERA.start_preview()
         sleep(1)
@@ -94,8 +95,7 @@ class TagReader:
         for det in dets:
             if det.tag_id <= max_tags_in_game and det.decision_margin > self.TAG_MARGIN:
                 det_dist = self.calc_tag_distance(det.corners)
-                if det_dist < self.TAG_DISTANCE:
-                    data_list.append((det.tag_id, det_dist))
+                data_list.append((det.tag_id, det_dist))
         return data_list
 
 
@@ -107,4 +107,5 @@ if __name__ == "__main__":
     for tup in det_list:
         print(tup)
     print("done")
+
 
